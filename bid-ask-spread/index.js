@@ -11,29 +11,33 @@ const rl = readline.createInterface({
    crlfDelay: Infinity,
 });
 
+// define variables to store the best bids and asks
 const bestBids = [];
 const bestAsks = [];
 const ARRAY_MAX_LENGTH = 10;
 
+// update or insert into array, based on price
 function updateOrInsert(array, newOrder, compareFn) {
-   let found = false;
+   let orderExists = false;
+   // look for the price in the array
    for (let i = 0; i < array.length; i++) {
       if (array[i].price === newOrder.price) {
          array[i].size += newOrder.size;
-         found = true;
+         orderExists = true;
          break;
       }
    }
-   if (!found) {
-      insertSorted(array, newOrder, compareFn);
-   }
-   if (array.length > ARRAY_MAX_LENGTH) {
-      array.pop();
-   }
+   // if order doesn't exist, insert it in the array
+   !orderExists && insertSorted(array, newOrder, compareFn);
+   // remove last item if array is too large
+   array.length > ARRAY_MAX_LENGTH && array.pop();
 }
 
+// insert into sorted array
 function insertSorted(array, element, compareFn) {
+   // default position is the end of the array
    let insertionIndex = array.length;
+   // find the correct position using the compare function
    for (let i = 0; i < array.length; i++) {
       if (compareFn(element, array[i]) < 0) {
          insertionIndex = i;
@@ -43,6 +47,7 @@ function insertSorted(array, element, compareFn) {
    array.splice(insertionIndex, 0, element);
 }
 
+// remove or reduce size of order in the array
 function handleCancellation(array, canceledOrder) {
    for (let i = 0; i < array.length; i++) {
       if (array[i].order_id === canceledOrder.order_id) {
@@ -57,17 +62,21 @@ function handleCancellation(array, canceledOrder) {
 
 rl.on("line", (line) => {
    const order = JSON.parse(line);
+
+   // handle new orders ("A" - add actions)
    if (order.action === "A") {
       let price = parseInt(order.price, 10) / 1e9;
       let size = parseInt(order.size, 10);
 
+      // handle asks
       if (order.side === "A") {
          updateOrInsert(
             bestAsks,
             { price, size, order_id: order.order_id },
             (a, b) => a.price - b.price
          );
-      } else if (order.side === "B") {
+      } // handle bids
+      else if (order.side === "B") {
          updateOrInsert(
             bestBids,
             { price, size, order_id: order.order_id },
@@ -91,6 +100,14 @@ rl.on("line", (line) => {
       };
 
       outputStream.write(JSON.stringify(result) + "\n");
+   }
+   // handle cancellations ("C" - cancel actions)
+   else if (order.action === "C") {
+      if (order.side === "A") {
+         handleCancellation(bestAsks, order);
+      } else if (order.side === "B") {
+         handleCancellation(bestBids, order);
+      }
    }
 });
 
