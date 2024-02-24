@@ -1,5 +1,8 @@
 # stock data
 stock-data/
+#bid ask spread outputs
+bid-ask-spread/outputs/
+
 
 
 # Logs
