@@ -14,7 +14,7 @@ const rl = readline.createInterface({
 // define variables to store the best bids and asks
 const bestBids = [];
 const bestAsks = [];
-const ARRAY_MAX_LENGTH = 10;
+const ARRAY_MAX_LENGTH = 4;
 
 // update or insert into array, based on price
 function updateOrInsert(array, newOrder, compareFn) {
@@ -63,7 +63,7 @@ function handleCancellation(array, canceledOrder) {
 rl.on("line", (line) => {
    const order = JSON.parse(line);
 
-   // handle new orders ("A" - add actions)
+   // handle new orders
    if (order.action === "A") {
       let price = parseInt(order.price, 10) / 1e9;
       let size = parseInt(order.size, 10);
@@ -75,7 +75,8 @@ rl.on("line", (line) => {
             { price, size, order_id: order.order_id },
             (a, b) => a.price - b.price
          );
-      } // handle bids
+      }
+      // handle bids
       else if (order.side === "B") {
          updateOrInsert(
             bestBids,
@@ -84,6 +85,7 @@ rl.on("line", (line) => {
          );
       }
 
+      // create the order object
       const result = {
          ts_event: order.ts_event,
          action: order.action,
