@@ -2,8 +2,9 @@ const fs = require("fs");
 const readline = require("readline");
 
 const fileStream = fs.createReadStream(
-   "../stock-data/smci/XNAS-20240217-DR3J9CCF3H/xnas-itch-20231218.mbo.json"
+   "../stock-data/smci/XNAS-20240217-DR3J9CCF3H/xnas-itch-20240205.mbo.json"
 );
+
 const outputStream = fs.createWriteStream("./outputs/jsOutput.json");
 
 const rl = readline.createInterface({

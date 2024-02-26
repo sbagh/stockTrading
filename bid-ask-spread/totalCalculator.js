@@ -11,13 +11,24 @@ const rl = readline.createInterface({
    crlfDelay: Infinity,
 });
 
+// store totals for each hour
 let hourlyTotals = {};
+// store totals for the entire file
+let overallTotals = {
+   A_sideA: 0,
+   A_sideB: 0,
+   total_T: 0,
+   total_C: 0,
+   total_F: 0,
+};
 
 rl.on("line", (line) => {
    const order = JSON.parse(line);
-   let size = parseInt(order.size, 10);
-   let hour = getHourFromTimestamp(order.hd.ts_event); // Accessing ts_event within hd
 
+   let size = parseInt(order.size, 10); // Convert the size field to an integer
+   let hour = getHourFromTimestamp(order.hd.ts_event); // get the hour from the timestamp
+
+   // initialize the hourlyTotals object if it doesn't exist
    if (!hourlyTotals[hour]) {
       hourlyTotals[hour] = {
          A_sideA: 0,
@@ -28,27 +39,34 @@ rl.on("line", (line) => {
       };
    }
 
+   // Process the order based on its action and update totals
    switch (order.action) {
       case "A":
          if (order.side === "A") {
             hourlyTotals[hour].A_sideA += size;
+            overallTotals.A_sideA += size;
          } else if (order.side === "B") {
             hourlyTotals[hour].A_sideB += size;
+            overallTotals.A_sideB += size;
          }
          break;
       case "T":
          hourlyTotals[hour].total_T += size;
+         overallTotals.total_T += size;
          break;
       case "C":
          hourlyTotals[hour].total_C += size;
+         overallTotals.total_C += size;
          break;
       case "F":
          hourlyTotals[hour].total_F += size;
+         overallTotals.total_F += size;
          break;
    }
 });
 
 rl.on("close", () => {
+   // Write each hour's totals to the output file
    Object.keys(hourlyTotals).forEach((hour) => {
       const data = {
          hour: hour,
@@ -56,28 +74,16 @@ rl.on("close", () => {
       };
       outputStream.write(JSON.stringify(data) + "\n");
    });
+
+   // Writing overall Totals to the file
+   outputStream.write("Overall Totals:\n");
+   outputStream.write(JSON.stringify(overallTotals) + "\n");
+
    outputStream.end();
    console.log("Finished processing and writing to NDJSON file.");
 });
 
-function formatDate(date) {
-   const twoDigits = (num) => String(num).padStart(2, "0");
-
-   return (
-      twoDigits(date.getDate()) +
-      "/" +
-      twoDigits(date.getMonth() + 1) +
-      "/" +
-      date.getFullYear().toString().slice(-2) +
-      " - " +
-      twoDigits(date.getHours()) +
-      ":" +
-      twoDigits(date.getMinutes()) +
-      ":" +
-      twoDigits(date.getSeconds())
-   );
-}
-
+// Helper function to extract the hour from a timestamp
 function getHourFromTimestamp(ts_event) {
    let date = new Date(ts_event); // Parse ISO 8601 format directly
    return (
