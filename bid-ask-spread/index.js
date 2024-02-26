@@ -18,7 +18,7 @@ const bestAsks = [];
 const ARRAY_MAX_LENGTH = 4;
 
 // update or insert into array, based on price
-function updateOrInsert(array, newOrder, compareFn) {
+const updateOrInsert = (array, newOrder, compareFn) => {
    let orderExists = false;
    // look for the price in the array
    for (let i = 0; i < array.length; i++) {
@@ -32,10 +32,10 @@ function updateOrInsert(array, newOrder, compareFn) {
    !orderExists && insertSorted(array, newOrder, compareFn);
    // remove last item if array is too large
    array.length > ARRAY_MAX_LENGTH && array.pop();
-}
+};
 
 // insert into sorted array
-function insertSorted(array, element, compareFn) {
+const insertSorted = (array, element, compareFn) => {
    // default position is the end of the array
    let insertionIndex = array.length;
    // find the correct position using the compare function
@@ -46,10 +46,10 @@ function insertSorted(array, element, compareFn) {
       }
    }
    array.splice(insertionIndex, 0, element);
-}
+};
 
 // remove or reduce size of order in the array
-function handleCancellation(array, canceledOrder) {
+const handleCancellation = (array, canceledOrder) => {
    for (let i = 0; i < array.length; i++) {
       if (array[i].order_id === canceledOrder.order_id) {
          array[i].size -= canceledOrder.size;
@@ -59,7 +59,7 @@ function handleCancellation(array, canceledOrder) {
          break;
       }
    }
-}
+};
 
 rl.on("line", (line) => {
    const order = JSON.parse(line);
