@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const readline = require("readline");
 
+// Processes a single file to calculate daily and hourly totals
 async function processFile(filePath) {
    let dailyTotals = {
       totalAsks: 0,
@@ -13,17 +14,20 @@ async function processFile(filePath) {
 
    let hourlyTotals = {};
 
+   // Create a readable stream from the file path
    const fileStream = fs.createReadStream(filePath);
    const rl = readline.createInterface({
       input: fileStream,
       crlfDelay: Infinity,
    });
 
+   // Process each line in the file
    for await (const line of rl) {
       const order = JSON.parse(line);
       let size = parseInt(order.size, 10);
       let hour = extractHour(order.hd.ts_event);
 
+      // initialize hourly totals for the hour if not already present
       if (!hourlyTotals[hour]) {
          hourlyTotals[hour] = {
             totalAsks: 0,
@@ -34,6 +38,7 @@ async function processFile(filePath) {
          };
       }
 
+      // update daily and hourly totals based on order action and side
       switch (order.action) {
          case "A":
             if (order.side === "A") {
@@ -67,18 +72,20 @@ function extractHour(timestamp) {
    return date.getHours();
 }
 
+// Processes all files in a directory and writes daily and hourly to json (ndjson)
 async function calculateSummary(directoryPath) {
-   const dailyOutputStream = fs.createWriteStream(
-      "./outputs/dailyTotals.ndjson"
-   );
+   // Create output streams for daily and hourly totals
+   const dailyOutputStream = fs.createWriteStream("./outputs/dailyTotals.json");
    const hourlyOutputStream = fs.createWriteStream(
-      "./outputs/hourlyTotals.ndjson"
+      "./outputs/hourlyTotals.json"
    );
 
+   // Get all files in the directory that match the expected file name format
    const files = fs
       .readdirSync(directoryPath)
       .filter((file) => file.match(/^xnas-itch-\d{8}\.mbo\.json$/));
 
+   // Process each file
    for (const file of files) {
       const filePath = path.join(directoryPath, file);
       console.log(`Processing file: ${filePath}`);
@@ -93,11 +100,11 @@ async function calculateSummary(directoryPath) {
            )}/${dateMatch[1].substring(6, 8)}`
          : "unknown";
 
-      // Include the date in the dailyTotals
+      // Add the date in the dailyTotals
       const dailyTotalsWithDate = { date, ...dailyTotals };
       dailyOutputStream.write(JSON.stringify(dailyTotalsWithDate) + "\n");
 
-      // Write hourlyTotals to NDJSON (assuming you want to keep hourly totals as they are)
+      // Write hourlyTotals to a json file
       Object.keys(hourlyTotals).forEach((hour) => {
          const data = {
             date, // Optionally include date in hourly totals if desired
@@ -111,7 +118,7 @@ async function calculateSummary(directoryPath) {
    dailyOutputStream.end();
    hourlyOutputStream.end();
 
-   console.log("Finished processing and writing to NDJSON files.");
+   console.log("Finished processing files");
 }
 
 const directoryPath = "../stock-data/smci/XNAS-20240217-DR3J9CCF3H";
