@@ -2,6 +2,8 @@
 stock-data/
 #bid ask spread outputs
 bid-ask-spread/outputs/
+# total orders calculator outputs
+total-orders-calculator/outputs/
 
 # Logs
 logs
