@@ -28,6 +28,7 @@ const updateOrInsert = (array, newOrder, compareFn) => {
          break;
       }
    }
+   
    // if order doesn't exist, insert it in the array
    !orderExists && insertSorted(array, newOrder, compareFn);
    // remove last item if array is too large
