@@ -4,7 +4,7 @@ const ndjson = require("ndjson");
 // Correct: Directly create a read stream from the file path
 const readStream = fs
    .createReadStream(
-      "../stock-data/smci/XNAS-20240217-DR3J9CCF3H/xnas-itch-20240205.mbo.json"
+      "../stock-data/smci/XNAS-20240217-DR3J9CCF3H/xnas-itch-20240111.mbo.json"
    )
    .pipe(ndjson.parse());
 
@@ -22,16 +22,16 @@ readStream.on("data", function (obj) {
    // Filter out records with action "T" and order_id "0"
    if (obj.action === "T" && obj.order_id === "0") {
       writeStream.write(JSON.stringify(obj) + "\n");
+      // Sum the sizes based on the side of each order
+      if (obj.side === "A") {
+         sums.A += obj.size;
+      } else if (obj.side === "B") {
+         sums.B += obj.size;
+      } else {
+         sums.other += obj.size;
+      }
    }
 
-   // Sum the sizes based on the side of each order
-   if (obj.side === "A") {
-      sums.A += obj.size;
-   } else if (obj.side === "B") {
-      sums.B += obj.size;
-   } else {
-      sums.other += obj.size;
-   }
 });
 
 readStream.on("end", function () {
