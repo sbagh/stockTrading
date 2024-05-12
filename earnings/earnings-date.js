@@ -1,7 +1,7 @@
 const https = require("https");
 const fs = require("fs");
 
-const API_KEY = "";
+const API_KEY = "DsUdQOaIwYDJC2MG6BoRVGYiY84sHQqD";
 
 const startDate = "2024-04-07";
 const endDate = "2024-08-10";
